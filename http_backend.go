@@ -15,23 +15,19 @@
 package colly
 
 import (
-	"crypto/sha1"
-	"encoding/gob"
-	"encoding/hex"
+	"compress/gzip"
+	"github.com/gregjones/httpcache"
 	"io"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"os"
-	"path"
 	"regexp"
 	"strings"
 	"sync"
 	"time"
 
-	"compress/gzip"
-
 	"github.com/gobwas/glob"
+	"github.com/gregjones/httpcache/diskcache"
 )
 
 type httpBackend struct {
@@ -133,37 +129,24 @@ func (h *httpBackend) Cache(request *http.Request, bodySize int, checkHeadersFun
 	if cacheDir == "" || request.Method != "GET" {
 		return h.Do(request, bodySize, checkHeadersFunc)
 	}
-	sum := sha1.Sum([]byte(request.URL.String()))
-	hash := hex.EncodeToString(sum[:])
-	dir := path.Join(cacheDir, hash[:2])
-	filename := path.Join(dir, hash)
-	if file, err := os.Open(filename); err == nil {
-		resp := new(Response)
-		err := gob.NewDecoder(file).Decode(resp)
-		file.Close()
-		if resp.StatusCode < 500 {
-			return resp, err
-		}
-	}
-	resp, err := h.Do(request, bodySize, checkHeadersFunc)
-	if err != nil || resp.StatusCode >= 500 {
-		return resp, err
-	}
-	if _, err := os.Stat(dir); err != nil {
-		if err := os.MkdirAll(dir, 0750); err != nil {
-			return resp, err
-		}
-	}
-	file, err := os.Create(filename + "~")
+
+	storage := diskcache.New(cacheDir)
+	cache := httpcache.NewTransport(storage)
+	cache.MarkCachedResponses = true
+	cachedClient := cache.Client()
+
+	res, err := cachedClient.Do(request)
 	if err != nil {
-		return resp, err
+		panic(err)
 	}
-	if err := gob.NewEncoder(file).Encode(resp); err != nil {
-		file.Close()
-		return resp, err
-	}
-	file.Close()
-	return resp, os.Rename(filename+"~", filename)
+
+	b, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	return &Response{
+		StatusCode: res.StatusCode,
+		Body:       b,
+		Headers:    &res.Header,
+	}, err
 }
 
 func (h *httpBackend) Do(request *http.Request, bodySize int, checkHeadersFunc checkHeadersFunc) (*Response, error) {
