@@ -16,7 +16,7 @@ package colly
 
 import (
 	"compress/gzip"
-	"github.com/gregjones/httpcache"
+	"github.com/pkmishra/httpcache"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -27,7 +27,7 @@ import (
 	"time"
 
 	"github.com/gobwas/glob"
-	"github.com/gregjones/httpcache/diskcache"
+	"github.com/pkmishra/httpcache/diskcache"
 )
 
 type httpBackend struct {

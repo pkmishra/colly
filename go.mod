@@ -11,10 +11,11 @@ require (
 	github.com/gobwas/glob v0.2.3
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/google/btree v1.0.0 // indirect
-	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
+	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/jawher/mow.cli v1.1.0
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
+	github.com/pkmishra/httpcache v0.0.0-20200527000425-538ff8a97619
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca
 	github.com/temoto/robotstxt v1.1.1
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
